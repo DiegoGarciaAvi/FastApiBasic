@@ -1,0 +1,2 @@
+1.- Para crear un token primer debemos Instalar
+    pip install pyjwt

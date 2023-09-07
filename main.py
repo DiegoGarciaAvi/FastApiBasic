@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse,JSONResponse
 from pydantic import BaseModel,Field
 from typing import Optional, List
 
+from jwt_manager import create_token
 
 ##La libreria pydantic es para poder crear los esquemas de las clases, y para sanear los parametros que se mandan
 ## Importar Body es para poder recibr informacion en formato json
@@ -20,6 +21,10 @@ from typing import Optional, List
 app = FastAPI()
 app.title = "Mi app"
 app.version="0.0.1"
+
+class User(BaseModel):
+    email:str
+    password:str
 
 class Movie(BaseModel):
     
@@ -79,6 +84,11 @@ movies=[
         'category': 'Fantasía'
     }
 ]
+
+##Metodo para loger
+@app.post('/login',tags=['auth'])
+def login(user:User):
+    return user
 
 ##NMetodos get
 @app.get('/',tags=["Home"])
