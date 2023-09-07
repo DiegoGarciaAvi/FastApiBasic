@@ -77,3 +77,18 @@ def getMoviesByCategory(category:str,anio:int):
     return []
      
 
+@app.post('/post',tags=['Movies'])
+def createMovie(id:int = Body(),title:str = Body(),overview:str=Body(),year:str=Body(),rating:int=Body(),category:str=Body()):
+    
+    movies.append(
+        {
+        'id':id,
+        'title':title,
+        'overview':overview,
+        'year':year,
+        'rating':rating,
+        'category':category,
+        }
+    )
+    
+    return movies
