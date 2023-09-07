@@ -1,9 +1,16 @@
-from fastapi import FastAPI,Body
+from fastapi import FastAPI,Body,Path,Query
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel,Field
 from typing import Optional
 
 ##La libreria pydantic es para poder crear los esquemas de las clases, y para sanear los parametros que se mandan
+## Importar Body es para poder recibr informacion en formato json
+## HTMLResponse es para poder retornar html en nuestros procesos
+## Optional, es para poder poner nuestras variables opcionales
+## BaseModel es para poder crear esquemas con las clases
+## Field es para poder sanear los campos en las clases
+## Path sirve para sanear los campos donde se esta esperando un parametro de la rul movie/{id}
+## Query es para sanear los campos que se envian como query movie?id=5?
 
 ##Se crea un endpoint
 
@@ -85,7 +92,7 @@ def getmovies():
 
 ##Get esperando parametros
 @app.get('/movies/{id}',tags=["Movies"])
-def getIdMovie(id:int):
+def getIdMovie(id:int = Path(ge=1,le=200)):
     
     for item in movies:
         print(item)
@@ -95,7 +102,7 @@ def getIdMovie(id:int):
  
 ##Get con parametros query       
 @app.get('/movies/',tags=['Movies'])
-def getMoviesByCategory(category:str,anio:int):
+def getMoviesByCategory(category:str = Query(min_length=5,max_length=15)):
     
     for item in movies:
         if item['title']==category:
