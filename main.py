@@ -1,7 +1,8 @@
 from fastapi import FastAPI,Body,Path,Query
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse,JSONResponse
 from pydantic import BaseModel,Field
-from typing import Optional
+from typing import Optional, List
+
 
 ##La libreria pydantic es para poder crear los esquemas de las clases, y para sanear los parametros que se mandan
 ## Importar Body es para poder recibr informacion en formato json
@@ -11,6 +12,8 @@ from typing import Optional
 ## Field es para poder sanear los campos en las clases
 ## Path sirve para sanear los campos donde se esta esperando un parametro de la rul movie/{id}
 ## Query es para sanear los campos que se envian como query movie?id=5?
+## JsonResponse para enviar respuestas en formato json al cliente
+## List es para poder retornar una lista
 
 ##Se crea un endpoint
 
@@ -24,7 +27,7 @@ class Movie(BaseModel):
     id:Optional[int] = None
     title:str = Field(max_length=15,min_length=5)
     overview:str=Field(max_length=15,min_length=5)
-    year:str=Field(max_length=15,min_length=5)
+    year:str=Field(max_length=15,min_length=2)
     rating:float=Field(le=2022)
     category:str=Field(max_length=15,min_length=5)
     
@@ -33,11 +36,11 @@ class Movie(BaseModel):
         json_schema_extra={
             "example":{
                 "id":1,
-                "title":"valor por defecto",
-                "overview":"valor por defecto",
-                "year":"valor por defecto",
+                "title":"My titulo",
+                "overview":"Reseña",
+                "year":"2022",
                 "rating":9.1,
-                "category":"valor por defecto"
+                "category":"Categoria"
             }
         }
 
@@ -83,6 +86,15 @@ def message():
     #return {"hello":"word"}
     return HTMLResponse('<h1>Hola</h1>')
 
+##Metodo get con Json
+@app.get('/moviesJson', tags=['Movies'])
+def getMoviesJson():
+    return JSONResponse(content=movies)
+
+##Metodo get con Json y indicando que se regresa una lista
+@app.get('/moviesList', tags=['Movies'],response_model=List[Movie])
+def getMoviesJson() -> List[Movie]:
+    return JSONResponse(content=movies)
 
 ## Get con una ruta
 @app.get('/movies',tags=['movies'])
@@ -100,6 +112,16 @@ def getIdMovie(id:int = Path(ge=1,le=200)):
             return item
  
  
+##Get regresando una Movie usando la importancion List
+@app.get('/movies/{id}',tags=["Movies"],response_model=Movie)
+def getIdMovie(id:int = Path(ge=1,le=200)) ->Movie:
+    
+    for item in movies:
+        print(item)
+        if item['id']==id:
+            return JSONResponse(item)
+ 
+  
 ##Get con parametros query       
 @app.get('/movies/',tags=['Movies'])
 def getMoviesByCategory(category:str = Query(min_length=5,max_length=15)):
@@ -133,8 +155,8 @@ def createMovie(movie:Movie):
     
     movies.append(movie)
     
-    return movies
-
+    #return movies
+    return JSONResponse(content={"message":"Registro correcto"})
 
 ##Metodo delete
 @app.delete('/delete/{id}',tags=['Movies'])
