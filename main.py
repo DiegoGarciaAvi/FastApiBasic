@@ -1,9 +1,10 @@
-from fastapi import FastAPI,Body,Path,Query
+from fastapi import Depends, FastAPI,Body, HTTPException,Path,Query,Request
 from fastapi.responses import HTMLResponse,JSONResponse
 from pydantic import BaseModel,Field
 from typing import Optional, List
+from fastapi.security import HTTPBearer
 
-from jwt_manager import create_token
+from jwt_manager import create_token, validate_token
 
 ##La libreria pydantic es para poder crear los esquemas de las clases, y para sanear los parametros que se mandan
 ## Importar Body es para poder recibr informacion en formato json
@@ -15,12 +16,21 @@ from jwt_manager import create_token
 ## Query es para sanear los campos que se envian como query movie?id=5?
 ## JsonResponse para enviar respuestas en formato json al cliente
 ## List es para poder retornar una lista
-
+## HTTBearer es para el token
+## Request es tener acceso a la peticion que viene del cliente
 ##Se crea un endpoint
 
 app = FastAPI()
 app.title = "Mi app"
 app.version="0.0.1"
+
+class JWTBearer(HTTPBearer):
+    async def __call__(self,request:Request):
+        auth = await super().__call__(request)
+        data = validate_token(auth.credentials)
+        if data['email'] != "admin@gmail.com":
+            raise HTTPException(status_code=403,detail="Credenciales incorrectas")
+        
 
 class User(BaseModel):
     email:str
@@ -85,6 +95,7 @@ movies=[
     }
 ]
 
+
 ##Metodo para loger
 @app.post('/login',tags=['auth'])
 def login(user:User):
@@ -100,7 +111,7 @@ def message():
     return HTMLResponse('<h1>Hola</h1>')
 
 ##Metodo get con Json
-@app.get('/moviesJson', tags=['Movies'])
+@app.get('/moviesJson', tags=['Movies'],dependencies=[Depends(JWTBearer())] )
 def getMoviesJson():
     return JSONResponse(content=movies)
 
