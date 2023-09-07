@@ -88,7 +88,10 @@ movies=[
 ##Metodo para loger
 @app.post('/login',tags=['auth'])
 def login(user:User):
-    return user
+    
+    if user.email=="admin@gmail.com" and user.password=="123":
+       token:str  = create_token(user.dict())
+       return JSONResponse(content=token)
 
 ##NMetodos get
 @app.get('/',tags=["Home"])
