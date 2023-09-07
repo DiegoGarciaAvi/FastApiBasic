@@ -76,7 +76,7 @@ def getMoviesByCategory(category:str,anio:int):
     
     return []
      
-
+##Metodo post
 @app.post('/post',tags=['Movies'])
 def createMovie(id:int = Body(),title:str = Body(),overview:str=Body(),year:str=Body(),rating:int=Body(),category:str=Body()):
     
@@ -92,3 +92,33 @@ def createMovie(id:int = Body(),title:str = Body(),overview:str=Body(),year:str=
     )
     
     return movies
+
+
+##Metodo delete
+@app.delete('/delete/{id}',tags=['Movies'])
+def deleteMovie(id:int):
+    global movies
+    movies=[pelicula for pelicula in movies if pelicula["id"]!=id ]
+    
+    return movies
+
+##Metodo put version1
+@app.put('/update',tags=['Movies'])
+def updateMovie(id:int = Body(),title:str = Body()):
+    
+    for pelicula in movies:
+        if pelicula["id"]==id:
+            pelicula["title"]=title
+    
+    return movies
+
+##Metodo put version2
+@app.put('/update/{id}',tags=['Movies'])
+def updateMovie2(id:int,title:str=Body()):
+    
+    for pelicula in movies:
+        if pelicula["id"]==id:
+            pelicula["title"]=title
+    
+    return movies    
+
