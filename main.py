@@ -1,11 +1,24 @@
 from fastapi import FastAPI,Body
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
+from typing import Optional
+
 
 ##Se crea un endpoint
 
 app = FastAPI()
 app.title = "Mi app"
 app.version="0.0.1"
+
+class Movie(BaseModel):
+    
+    #id:int | None = None
+    id:Optional[int] = None
+    title:str
+    overview:str
+    year:str
+    rating:int
+    category:str
 
 
 movies=[
@@ -93,6 +106,15 @@ def createMovie(id:int = Body(),title:str = Body(),overview:str=Body(),year:str=
     
     return movies
 
+##Metodo post v2
+@app.post('/post2',tags=['Movies'])
+def createMovie(movie:Movie):
+    
+    movies.append(movie)
+    
+    return movies
+
+
 
 ##Metodo delete
 @app.delete('/delete/{id}',tags=['Movies'])
@@ -101,6 +123,7 @@ def deleteMovie(id:int):
     movies=[pelicula for pelicula in movies if pelicula["id"]!=id ]
     
     return movies
+
 
 ##Metodo put version1
 @app.put('/update',tags=['Movies'])
@@ -112,6 +135,7 @@ def updateMovie(id:int = Body(),title:str = Body()):
     
     return movies
 
+
 ##Metodo put version2
 @app.put('/update/{id}',tags=['Movies'])
 def updateMovie2(id:int,title:str=Body()):
@@ -120,5 +144,19 @@ def updateMovie2(id:int,title:str=Body()):
         if pelicula["id"]==id:
             pelicula["title"]=title
     
+    return movies    
+
+##Metodo put version3
+@app.put('/update2/{id}',tags=['Movies'])
+def updateMovie2(id:int,movie:Movie):
+    
+    for pelicula in movies:
+        if pelicula["id"]==id:
+            pelicula["title"]=movie.title
+            pelicula["overview"]=movie.overview
+            pelicula["year"]=movie.year
+            pelicula["rating"]=movie.rating
+            pelicula["category"]=movie.category
+
     return movies    
 
