@@ -176,7 +176,6 @@ def getMoviesByCategory(category:str = Query(min_length=5,max_length=15)):
     
     return [] """
     
-    return 0
      
 ##Metodo post
 @app.post('/post',tags=['Movies'])
@@ -215,10 +214,20 @@ def createMovie(movie:Movie):
 ##Metodo delete
 @app.delete('/delete/{id}',tags=['Movies'])
 def deleteMovie(id:int):
-    global movies
+    
+    db=Session()
+    result=db.query(MovieModel).filter(MovieModel.id==id).first()
+    if not result:
+        return JSONResponse(content={"message":"No encontrado"})
+    
+    db.delete(result)
+    db.commit()
+    return JSONResponse(content={"Message":"Exito eliminando"})
+    
+    """ global movies
     movies=[pelicula for pelicula in movies if pelicula["id"]!=id ]
     
-    return movies
+    return movies """
 
 
 ##Metodo put version1
@@ -235,19 +244,32 @@ def updateMovie(id:int = Body(),title:str = Body()):
 ##Metodo put version2
 @app.put('/update/{id}',tags=['Movies'])
 def updateMovie2(id:int,title:str=Body()):
-    
+      
     for pelicula in movies:
         if pelicula["id"]==id:
             pelicula["title"]=title
     
     return movies    
-
+ 
 
 ##Metodo put version3
 @app.put('/update2/{id}',tags=['Movies'])
 def updateMovie2(id:int,movie:Movie):
     
-    for pelicula in movies:
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.id==id).first()
+    if not result :
+        return JSONResponse(content={"Mesagge":"No encotrado"})
+    result.title=movie.title
+    result.overview=movie.overview
+    result.year=movie.year
+    result.rating=movie.rating
+    result.category=movie.category
+    
+    db.commit()
+    return JSONResponse(content={"message":"Extio"})
+    
+    """ for pelicula in movies:
         if pelicula["id"]==id:
             pelicula["title"]=movie.title
             pelicula["overview"]=movie.overview
@@ -255,5 +277,5 @@ def updateMovie2(id:int,movie:Movie):
             pelicula["rating"]=movie.rating
             pelicula["category"]=movie.category
 
-    return movies    
+    return movies    """ 
 
