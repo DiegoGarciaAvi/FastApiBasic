@@ -4,7 +4,8 @@ from pydantic import BaseModel,Field
 from typing import Optional, List
 from fastapi.security import HTTPBearer
 from config.database import Session,engine,Base
-from models.movie import Movie
+from models.movie import Movie as MovieModel 
+from fastapi.encoders import jsonable_encoder
 
 from jwt_manager import create_token, validate_token
 
@@ -117,7 +118,10 @@ def message():
 ##Metodo get con Json
 @app.get('/moviesJson', tags=['Movies'],dependencies=[Depends(JWTBearer())] )
 def getMoviesJson():
-    return JSONResponse(content=movies)
+    db = Session()
+    result=db.query(MovieModel).all()
+   # return JSONResponse(content=movies)
+    return JSONResponse(content=jsonable_encoder(result))
 
 ##Metodo get con Json y indicando que se regresa una lista
 @app.get('/moviesList', tags=['Movies'],response_model=List[Movie])
@@ -134,10 +138,16 @@ def getmovies():
 @app.get('/movies/{id}',tags=["Movies"])
 def getIdMovie(id:int = Path(ge=1,le=200)):
     
-    for item in movies:
+    db = Session()
+    result= db.query(MovieModel).filter(MovieModel.id==id).first()
+    if not result:
+        return JSONResponse(content={"message":"No existe"})
+    return JSONResponse(content=jsonable_encoder(result))
+    
+    f""" or item in movies:
         print(item)
         if item['id']==id:
-            return item
+            return item """
  
  
 ##Get regresando una Movie usando la importancion List
@@ -154,11 +164,19 @@ def getIdMovie(id:int = Path(ge=1,le=200)) ->Movie:
 @app.get('/movies/',tags=['Movies'])
 def getMoviesByCategory(category:str = Query(min_length=5,max_length=15)):
     
-    for item in movies:
+    db = Session()
+    result=db.query(MovieModel).filter(MovieModel.category==category).all()
+    if not result:
+        return JSONResponse(content={"messagge:":"No encotrado"})
+    return JSONResponse(content=jsonable_encoder(result))
+    
+    """ for item in movies:
         if item['title']==category:
             return item
     
-    return []
+    return [] """
+    
+    return 0
      
 ##Metodo post
 @app.post('/post',tags=['Movies'])
@@ -181,7 +199,15 @@ def createMovie(id:int = Body(),title:str = Body(),overview:str=Body(),year:str=
 @app.post('/post2',tags=['Movies'])
 def createMovie(movie:Movie):
     
-    movies.append(movie)
+    ##Pasar datos haciendo la conexion a db
+    
+    db= Session()
+#    MovieModel(title=movie.title)
+    new_movie = MovieModel(**movie.dict())    
+    db.add(new_movie)
+    db.commit()
+    
+    #movies.append(movie)
     
     #return movies
     return JSONResponse(content={"message":"Registro correcto"})
