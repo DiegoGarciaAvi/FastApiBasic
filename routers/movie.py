@@ -9,7 +9,7 @@ from fastapi.encoders import jsonable_encoder
 from middlewares.error_handler import ErrorHandler
 from middlewares.jwt_bearer import JWTBearer
 from jwt_manager import create_token, validate_token
-
+from services.movie import MovieService
 
 movie_router=APIRouter()
 
@@ -88,7 +88,8 @@ def getmovies():
 def getIdMovie(id:int = Path(ge=1,le=200)):
     
     db = Session()
-    result= db.query(MovieModel).filter(MovieModel.id==id).first()
+    #result= db.query(MovieModel).filter(MovieModel.id==id).first()
+    result= MovieService(db).getMovie(id)
     if not result:
         return JSONResponse(content={"message":"No existe"})
     return JSONResponse(content=jsonable_encoder(result))
@@ -114,7 +115,7 @@ def getIdMovie(id:int = Path(ge=1,le=200)) ->Movie:
 def getMoviesByCategory(category:str = Query(min_length=5,max_length=15)):
     
     db = Session()
-    result=db.query(MovieModel).filter(MovieModel.category==category).all()
+    result=MovieService(db).getMovieByCategori(category)
     if not result:
         return JSONResponse(content={"messagge:":"No encotrado"})
     return JSONResponse(content=jsonable_encoder(result))
@@ -125,7 +126,17 @@ def getMoviesByCategory(category:str = Query(min_length=5,max_length=15)):
     
     return [] """
     
-     
+    
+##Metodo get con Json
+@movie_router.get('/moviesJson', tags=['Movies'],dependencies=[Depends(JWTBearer())] )
+def getMoviesJson():
+    db = Session()
+    result= MovieService(db).getMovies()
+    #result=db.query(MovieModel).all()
+   # return JSONResponse(content=movies)
+    return JSONResponse(content=jsonable_encoder(result))
+    
+    
 ##Metodo post
 @movie_router.post('/post',tags=['Movies'])
 def createMovie(id:int = Body(),title:str = Body(),overview:str=Body(),year:str=Body(),rating:int=Body(),category:str=Body()):
@@ -228,10 +239,3 @@ def updateMovie2(id:int,movie:Movie):
 
     return movies    """ 
 
-##Metodo get con Json
-@movie_router.get('/moviesJson', tags=['Movies'],dependencies=[Depends(JWTBearer())] )
-def getMoviesJson():
-    db = Session()
-    result=db.query(MovieModel).all()
-   # return JSONResponse(content=movies)
-    return JSONResponse(content=jsonable_encoder(result))
