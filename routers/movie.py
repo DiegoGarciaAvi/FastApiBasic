@@ -1,8 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Depends, FastAPI,Body, HTTPException,Path,Query,Request
 from fastapi.responses import HTMLResponse,JSONResponse
-from pydantic import BaseModel,Field
-from typing import Optional, List
+from typing import List
 from config.database import Session,engine,Base
 from models.movie import Movie as MovieModel 
 from fastapi.encoders import jsonable_encoder
@@ -10,31 +9,9 @@ from middlewares.error_handler import ErrorHandler
 from middlewares.jwt_bearer import JWTBearer
 from jwt_manager import create_token, validate_token
 from services.movie import MovieService
+from schemas.movie import Movie
 
 movie_router=APIRouter()
-
-class Movie(BaseModel):
-    
-    #id:int | None = None
-    id:Optional[int] = None
-    title:str = Field(max_length=15,min_length=5)
-    overview:str=Field(max_length=15,min_length=5)
-    year:str=Field(max_length=15,min_length=2)
-    rating:float=Field(le=2022)
-    category:str=Field(max_length=15,min_length=5)
-    
-    ##Con esta clase, se cargan los valores defaul de movies, debe de llamarse json_schema_extra, asi lo detecta la libreria
-    class Config:
-        json_schema_extra={
-            "example":{
-                "id":1,
-                "title":"My titulo",
-                "overview":"Reseña",
-                "year":"2022",
-                "rating":9.1,
-                "category":"Categoria"
-            }
-        }
 
 movies=[
     {
@@ -162,9 +139,7 @@ def createMovie(movie:Movie):
     
     db= Session()
 #    MovieModel(title=movie.title)
-    new_movie = MovieModel(**movie.dict())    
-    db.add(new_movie)
-    db.commit()
+    MovieService(db).guardarMovie(movie)
     
     #movies.append(movie)
     
@@ -176,14 +151,12 @@ def createMovie(movie:Movie):
 def deleteMovie(id:int):
     
     db=Session()
-    result=db.query(MovieModel).filter(MovieModel.id==id).first()
+    result=MovieService(db).getMovie(id)
     if not result:
         return JSONResponse(content={"message":"No encontrado"})
     
-    db.delete(result)
-    db.commit()
-    return JSONResponse(content={"Message":"Exito eliminando"})
-    
+    MovieService(db).deleteMovie(id)
+    return JSONResponse(content={"Message":"Exito eliminando"})    
     """ global movies
     movies=[pelicula for pelicula in movies if pelicula["id"]!=id ]
     
@@ -217,16 +190,14 @@ def updateMovie2(id:int,title:str=Body()):
 def updateMovie2(id:int,movie:Movie):
     
     db = Session()
-    result = db.query(MovieModel).filter(MovieModel.id==id).first()
+    result = MovieService(db).getMovie(id)
+    
+
     if not result :
         return JSONResponse(content={"Mesagge":"No encotrado"})
-    result.title=movie.title
-    result.overview=movie.overview
-    result.year=movie.year
-    result.rating=movie.rating
-    result.category=movie.category
     
-    db.commit()
+    MovieService(db).upadteMovie(id,movie)
+    
     return JSONResponse(content={"message":"Extio"})
     
     """ for pelicula in movies:

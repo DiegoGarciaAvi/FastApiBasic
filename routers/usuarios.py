@@ -1,13 +1,10 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
 from jwt_manager import create_token 
 from fastapi.responses import HTMLResponse,JSONResponse
+from schemas.usuario import User
 
 usuarios_route = APIRouter()
 
-class User(BaseModel):
-    email:str
-    password:str
 
 
 ##Metodo para loger
